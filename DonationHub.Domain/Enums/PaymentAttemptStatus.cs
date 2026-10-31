@@ -1,0 +1,15 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Runtime.InteropServices;
+using System.Text;
+
+namespace DonationHub.Domain.Enums
+{
+    public enum PaymentAttemptStatus
+    {
+        Created,
+        Succeeded,
+        Failed ,
+        Expired
+    }
+}
