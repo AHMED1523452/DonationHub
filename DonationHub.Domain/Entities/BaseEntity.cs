@@ -5,7 +5,7 @@ namespace DonationHub.Domain.Entities
     {
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
-        public string CreatedByUserId { get; set; } = "System";
+        public Guid CreatedByUserId { get; set; }
         public string CreatedByIP { get; set; }
         public bool IsArchieved { get; set; } = false;
         public bool IsActive { get; set; } = true;

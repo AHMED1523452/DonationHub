@@ -17,39 +17,29 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-var argsList = Environment.GetCommandLineArgs();
-var runningEf = argsList.Any(a => a.Equals("ef", StringComparison.OrdinalIgnoreCase) ||
-                                  a.IndexOf("ef", StringComparison.OrdinalIgnoreCase) >= 0);
-
-if (!runningEf && builder.Environment.IsDevelopment())
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(options =>
 {
-    builder.Services.AddEndpointsApiExplorer();
-    builder.Services.AddSwaggerGen(options =>
+    var xmlPath = Path.Combine(
+        AppContext.BaseDirectory,
+        $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml");
+
+    if (File.Exists(xmlPath))
+        options.IncludeXmlComments(xmlPath);
+
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
-
-        //. Include XML comments if the XML documentation file exists
-        var xmlPath = Path.Combine(
-            AppContext.BaseDirectory,
-            $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml");
-
-        //. Check if the XML documentation file exists before including it
-        if (File.Exists(xmlPath))
-            options.IncludeXmlComments(xmlPath);
-
-        options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-        {
-            Type = SecuritySchemeType.Http,
-            Scheme = "bearer",
-            BearerFormat = "JWT",
-            Description = "Enter your JWT bearer token."
-        });
-
-        options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
-        {
-            [new OpenApiSecuritySchemeReference("Bearer", document)] = []
-        });
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        Description = "Enter your JWT bearer token."
     });
-}
+
+    options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
+    {
+        [new OpenApiSecuritySchemeReference("Bearer", document)] = []
+    });
+});
 
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
@@ -60,6 +50,9 @@ builder.Services.AddSingleton<TimeProvider>(TimeProvider.System);
 
 builder.Services.AddLogging();
 builder.Services.AddTransient<GlobalExceptionMiddleware>();
+
+//. Register the SavingChangesInterceptor to intercept SaveChanges events
+builder.Services.AddScoped<SavingChagnesInterception>();
 
 //. Configuration for Jwt Options 
 builder.Services
@@ -98,23 +91,22 @@ builder.Services.AddControllers()
                 .AddJsonOptions(options =>
                     options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
-
 var app = builder.Build();
 
 await DatabaseSeeder.SeedAsync(app.Services, app.Configuration);
 
 // Configure the HTTP request pipeline.
+app.UseHttpsRedirection();
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
-    app.MapOpenApi();
-    app.MapScalarApiReference(); //. we will use scalar to test the APIs 
+    app.UseSwaggerUI(options =>
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "DonationHub API v1"));
+    app.MapScalarApiReference(options =>
+        options.WithOpenApiRoutePattern("/swagger/v1/swagger.json")); //. we will use scalar to test the APIs
 }
 
-app.UseHttpsRedirection();
 app.UseMiddleware<GlobalExceptionMiddleware>();
 
 app.UseRouting();

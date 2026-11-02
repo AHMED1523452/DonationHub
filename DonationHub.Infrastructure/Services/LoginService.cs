@@ -6,6 +6,7 @@ using DonationHub.Domain.Entities;
 using DonationHub.Infrastructure.Security;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.Extensions.Options;
 
 namespace DonationHub.Infrastructure.Services
@@ -110,14 +111,14 @@ namespace DonationHub.Infrastructure.Services
             var result = new GenericResult<string>();
 
             var currentUserId = currentUser.GetCurrentUserService();
-            if (currentUserId is null)
+            if (currentUserId == default(Guid))
             {
                 result.IsSuccess = false;
                 result.Message = "The current user could not be identified.";
                 return result;
             }
 
-            var userId = currentUserId.Value.ToString();
+            var userId = currentUserId.ToString();
             var revokedAt = timeProvider.GetUtcNow().UtcDateTime;
 
             //. avoding doing this approach using foreach or looping on the tokens that was not revoked for this user and revoke these toknes

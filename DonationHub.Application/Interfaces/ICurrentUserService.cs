@@ -4,7 +4,7 @@ namespace DonationHub.Application.Interfaces
 {
     public interface ICurrentUserService
     {
-       Guid? GetCurrentUserService();
+       Guid GetCurrentUserService();
        
        string? UserIP();
        

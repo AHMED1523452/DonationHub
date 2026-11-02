@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
 
-namespace DonationHub.Infrastructure.Persistence.Migrations
+namespace DonationHub.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
     partial class AppDbContextModelSnapshot : ModelSnapshot
@@ -137,10 +137,9 @@ namespace DonationHub.Infrastructure.Persistence.Migrations
                         .HasMaxLength(45)
                         .HasColumnType("nvarchar(45)");
 
-                    b.Property<string>("CreatedByUserId")
-                        .IsRequired()
+                    b.Property<Guid>("CreatedByUserId")
                         .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("datetime2");
@@ -155,10 +154,6 @@ namespace DonationHub.Infrastructure.Persistence.Migrations
 
                     b.Property<DateTime>("EndDate")
                         .HasColumnType("datetime2");
-
-                    b.Property<decimal>("GoalAmount")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
 
                     b.Property<bool>("IsActive")
                         .ValueGeneratedOnAdd()
@@ -208,6 +203,8 @@ namespace DonationHub.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("CategoryId");
 
+                    b.HasIndex("CreatedByUserId");
+
                     b.ToTable("Campaigns", (string)null);
                 });
 
@@ -225,10 +222,9 @@ namespace DonationHub.Infrastructure.Persistence.Migrations
                         .HasMaxLength(45)
                         .HasColumnType("nvarchar(45)");
 
-                    b.Property<string>("CreatedByUserId")
-                        .IsRequired()
+                    b.Property<Guid>("CreatedByUserId")
                         .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("datetime2");
@@ -271,6 +267,10 @@ namespace DonationHub.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("NameAr");
+
+                    b.HasIndex("NameEn");
+
                     b.ToTable("Categories", (string)null);
                 });
 
@@ -294,10 +294,9 @@ namespace DonationHub.Infrastructure.Persistence.Migrations
                         .HasMaxLength(45)
                         .HasColumnType("nvarchar(45)");
 
-                    b.Property<string>("CreatedByUserId")
-                        .IsRequired()
+                    b.Property<Guid>("CreatedByUserId")
                         .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("datetime2");
@@ -338,6 +337,8 @@ namespace DonationHub.Infrastructure.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CampaignId");
+
+                    b.HasIndex("CreatedByUserId");
 
                     b.ToTable("Donations", null, t =>
                         {
@@ -403,10 +404,9 @@ namespace DonationHub.Infrastructure.Persistence.Migrations
                         .HasMaxLength(45)
                         .HasColumnType("nvarchar(45)");
 
-                    b.Property<string>("CreatedByUserId")
-                        .IsRequired()
+                    b.Property<Guid>("CreatedByUserId")
                         .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("datetime2");
@@ -685,7 +685,40 @@ namespace DonationHub.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("DonationHub.Domain.Entities.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("CreatedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.OwnsOne("DonationHub.Domain.Entities.Money", "GoalAmount", b1 =>
+                        {
+                            b1.Property<Guid>("CampaignId")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<decimal>("Amount")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("decimal(18,2)")
+                                .HasColumnName("GoalAmount");
+
+                            b1.Property<string>("currency")
+                                .IsRequired()
+                                .HasMaxLength(3)
+                                .HasColumnType("nvarchar(3)")
+                                .HasColumnName("Currency");
+
+                            b1.HasKey("CampaignId");
+
+                            b1.ToTable("Campaigns");
+
+                            b1.WithOwner()
+                                .HasForeignKey("CampaignId");
+                        });
+
                     b.Navigation("Category");
+
+                    b.Navigation("GoalAmount")
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("DonationHub.Domain.Entities.Donation", b =>
@@ -693,6 +726,12 @@ namespace DonationHub.Infrastructure.Persistence.Migrations
                     b.HasOne("DonationHub.Domain.Entities.Campaign", "Campaign")
                         .WithMany("Donations")
                         .HasForeignKey("CampaignId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("DonationHub.Domain.Entities.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("CreatedByUserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 

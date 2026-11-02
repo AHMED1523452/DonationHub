@@ -14,12 +14,10 @@ namespace DonationHub.Infrastructure.Services
         {
             this.accessor = accessor;
         }
-        public Guid? GetCurrentUserService()
+        public Guid GetCurrentUserService()
         {
             var userId = accessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            return Guid.TryParse(userId, out var result) == false ?
-                                    null
-                                    : result;
+            return Guid.TryParse(userId, out var result) ? result : Guid.Empty;
         }
 
         public string? UserIP() => accessor.HttpContext?.Connection.RemoteIpAddress?.ToString() ?? string.Empty;

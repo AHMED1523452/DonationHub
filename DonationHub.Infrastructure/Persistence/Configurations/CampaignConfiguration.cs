@@ -14,7 +14,19 @@ public sealed class CampaignConfiguration : BaseEntityConfiguration<Campaign>
         builder.Property(campaign => campaign.TitleEn).HasMaxLength(200).IsRequired();
         builder.Property(campaign => campaign.DescriptionAr).HasMaxLength(4000);
         builder.Property(campaign => campaign.DescriptionEn).HasMaxLength(4000);
-        builder.Property(campaign => campaign.GoalAmount).HasPrecision(18, 2).IsRequired();
+        builder.OwnsOne(campaign => campaign.GoalAmount, money =>
+        {
+            money.Property(value => value.Amount)
+                .HasColumnName("GoalAmount")
+                .HasPrecision(18, 2)
+                .IsRequired();
+
+            money.Property(value => value.currency)
+                .HasColumnName("Currency")
+                .HasConversion<string>()
+                .HasMaxLength(3)
+                .IsRequired();
+        });
         builder.Property(campaign => campaign.RaisedAmount).HasPrecision(18, 2).HasDefaultValue(0m);
         builder.Property(campaign => campaign.EndDate).IsRequired();
         builder.Property(campaign => campaign.BannerName).HasMaxLength(255);
@@ -33,6 +45,11 @@ public sealed class CampaignConfiguration : BaseEntityConfiguration<Campaign>
         builder.HasOne(campaign => campaign.Category)
             .WithMany(category => category.campaigns)
             .HasForeignKey(campaign => campaign.CategoryId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne<ApplicationUser>()
+            .WithMany()
+            .HasForeignKey("CreatedByUserId")
             .OnDelete(DeleteBehavior.Restrict);
 
         ConfigureBaseProperties(builder);

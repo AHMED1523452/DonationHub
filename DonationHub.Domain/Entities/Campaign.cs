@@ -8,20 +8,20 @@ namespace DonationHub.Domain.Entities
     public class Campaign : BaseEntity, ISoftDeletable
     {
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public Guid Id { get; set; }
-        public string TitleAr { get; set; }
-        public string TitleEn { get; set; }
-        public string? DescriptionAr { get; set; }
-        public string? DescriptionEn { get; set; }
-        public decimal GoalAmount { get; private set; }
-        public decimal RaisedAmount { get; set; }
+        public Guid Id { get; private set; }
+        public string TitleAr { get; private set; }
+        public string TitleEn { get; private set; }
+        public string? DescriptionAr { get; private set; }
+        public string? DescriptionEn { get; private set; }
+        public Money GoalAmount { get; private set; }
+        public decimal RaisedAmount { get; private set; }
         public DateTime EndDate { get; private set; }
-        public string? BannerName { get; set; }
+        public string? BannerName { get; private set; }
         public string Status { get; private set; }
         public byte[] RowVersion { get; private set; } //. will be created automatic from SQL server
-        public Guid CategoryId { get; set; }
+        public Guid CategoryId { get; private set; }
         [ForeignKey("CategoryId")]
-        public Category? Category { get; set; }
+        public Category? Category { get; private set; }
         public bool IsDeleted { get ; set ; }
         public DateTime? DeletedAt { get ; set ; }
 
@@ -29,27 +29,45 @@ namespace DonationHub.Domain.Entities
 
         private Campaign() { }
 
-        public Campaign(decimal goalAmount,
+        public Campaign(string titleAr,
+                        string titleEn,
+                        string? descriptionAr,
+                        string? descriptionEn,
+                        string? bannerName,
+                        decimal goalAmount,
+                        CurrencyValues currency,
                         DateTime endDate,
+                        Guid categoryId,
                         DateTime utcNow)
         {
-            GoalAmount = goalAmount <= 0 ?
-                    throw new ArgumentException("Amount must be greater than 0")
-                    : goalAmount;
+            TitleAr = string.IsNullOrWhiteSpace(titleAr)
+                ? throw new ArgumentException("Title (AR) is required.", nameof(titleAr))
+                : titleAr.Trim();
+
+            TitleEn = string.IsNullOrWhiteSpace(titleEn)
+                ? throw new ArgumentException("Title (EN) is required.", nameof(titleEn))
+                : titleEn.Trim();
+
+            CategoryId = categoryId == Guid.Empty
+                ? throw new ArgumentException("Category is required.", nameof(categoryId))
+                : categoryId;
+
+            GoalAmount = new Money(goalAmount, currency);
 
             EndDate = endDate <= utcNow ?
                     throw new ArgumentException("Invalid End date. ")
                     : endDate;
 
+            DescriptionAr = descriptionAr;
+            DescriptionEn = descriptionEn;
+            BannerName = bannerName;
+            RaisedAmount = 0m;
             Status = CampaignStatus.Active.ToString();
-
         }
 
-        public void ChangeEndDate(decimal goalAmount,DateTime endDate)
+        public void ChangeEndDate(decimal goalAmount, CurrencyValues currency, DateTime endDate)
         {
-            GoalAmount = goalAmount <= 0 ?
-                    throw new ArgumentException("Amount must be greater than 0")
-                    : goalAmount;
+            GoalAmount = new Money(goalAmount, currency);
 
             EndDate = endDate <= DateTime.UtcNow ? throw new ArgumentException("Invaid end date.")
                                    : endDate;

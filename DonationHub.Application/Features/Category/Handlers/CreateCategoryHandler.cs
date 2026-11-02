@@ -48,7 +48,7 @@ namespace DonationHub.Application.Features.Category.Handlers
                                                        request.requestDTO.DescriptionAr.Trim(),
                                                        request.requestDTO.DescriptionEn.Trim());
 
-            category.CreatedByUserId = currentUserService.GetCurrentUserService()!.ToString() ?? "System";
+            category.CreatedByUserId = currentUserService.GetCurrentUserService()!;
             category.CreatedByIP = currentUserService.UserIP()!; //. must be existed (The user is logged in as an admin)
 
             await repository.AddAsync(category, cancellationToken);

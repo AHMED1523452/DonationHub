@@ -5,10 +5,10 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #pragma warning disable CA1814 // Prefer jagged arrays over multidimensional
 
-namespace DonationHub.Infrastructure.Persistence.Migrations
+namespace DonationHub.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class updatesInModelsRelations : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -33,8 +33,10 @@ namespace DonationHub.Infrastructure.Persistence.Migrations
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     FullName = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
-                    preferredLanguage = table.Column<string>(type: "nvarchar(2)", maxLength: 2, nullable: false),
+                    preferredLanguage = table.Column<string>(type: "nvarchar(2)", maxLength: 2, nullable: false, defaultValue: "en"),
                     IsActive = table.Column<bool>(type: "bit", nullable: false, defaultValue: true),
+                    IsRevoked = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
+                    RevokedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
@@ -69,7 +71,7 @@ namespace DonationHub.Infrastructure.Persistence.Migrations
                     DeletedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    CreatedByUserId = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    CreatedByUserId = table.Column<Guid>(type: "uniqueidentifier", maxLength: 100, nullable: false),
                     CreatedByIP = table.Column<string>(type: "nvarchar(45)", maxLength: 45, nullable: false),
                     IsArchieved = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
                     IsActive = table.Column<bool>(type: "bit", nullable: false, defaultValue: true)
@@ -116,7 +118,8 @@ namespace DonationHub.Infrastructure.Persistence.Migrations
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     UserId = table.Column<string>(type: "nvarchar(36)", maxLength: 36, nullable: false),
                     TokenHash = table.Column<string>(type: "nvarchar(512)", maxLength: 512, nullable: false),
-                    ReplacedByTokenId = table.Column<string>(type: "nvarchar(36)", maxLength: 36, nullable: false),
+                    ReplacedByTokenId = table.Column<string>(type: "nvarchar(36)", maxLength: 36, nullable: true),
+                    IsRevoked = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
                     RevokedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     ExpiresAt = table.Column<DateTime>(type: "datetime2", nullable: false)
@@ -242,6 +245,7 @@ namespace DonationHub.Infrastructure.Persistence.Migrations
                     DescriptionAr = table.Column<string>(type: "nvarchar(4000)", maxLength: 4000, nullable: true),
                     DescriptionEn = table.Column<string>(type: "nvarchar(4000)", maxLength: 4000, nullable: true),
                     GoalAmount = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
+                    Currency = table.Column<string>(type: "nvarchar(3)", maxLength: 3, nullable: false),
                     RaisedAmount = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false, defaultValue: 0m),
                     EndDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     BannerName = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
@@ -252,7 +256,7 @@ namespace DonationHub.Infrastructure.Persistence.Migrations
                     DeletedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    CreatedByUserId = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    CreatedByUserId = table.Column<Guid>(type: "uniqueidentifier", maxLength: 100, nullable: false),
                     CreatedByIP = table.Column<string>(type: "nvarchar(45)", maxLength: 45, nullable: false),
                     IsArchieved = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
                     IsActive = table.Column<bool>(type: "bit", nullable: false, defaultValue: true)
@@ -260,6 +264,12 @@ namespace DonationHub.Infrastructure.Persistence.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Campaigns", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Campaigns_AspNetUsers_CreatedByUserId",
+                        column: x => x.CreatedByUserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_Campaigns_Categories_CategoryId",
                         column: x => x.CategoryId,
@@ -285,7 +295,7 @@ namespace DonationHub.Infrastructure.Persistence.Migrations
                     DeletedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    CreatedByUserId = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    CreatedByUserId = table.Column<Guid>(type: "uniqueidentifier", maxLength: 100, nullable: false),
                     CreatedByIP = table.Column<string>(type: "nvarchar(45)", maxLength: 45, nullable: false),
                     IsArchieved = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
                     IsActive = table.Column<bool>(type: "bit", nullable: false, defaultValue: true)
@@ -294,6 +304,12 @@ namespace DonationHub.Infrastructure.Persistence.Migrations
                 {
                     table.PrimaryKey("PK_Donations", x => x.Id);
                     table.CheckConstraint("CK_Donations_Amount_Range", "[Amount] >= 1.00 AND [Amount] <= 10000.00");
+                    table.ForeignKey(
+                        name: "FK_Donations_AspNetUsers_CreatedByUserId",
+                        column: x => x.CreatedByUserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_Donations_Campaigns_CampaignId",
                         column: x => x.CampaignId,
@@ -317,7 +333,7 @@ namespace DonationHub.Infrastructure.Persistence.Migrations
                     DeletedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    CreatedByUserId = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    CreatedByUserId = table.Column<Guid>(type: "uniqueidentifier", maxLength: 100, nullable: false),
                     CreatedByIP = table.Column<string>(type: "nvarchar(45)", maxLength: 45, nullable: false),
                     IsArchieved = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
                     IsActive = table.Column<bool>(type: "bit", nullable: false, defaultValue: true)
@@ -388,9 +404,29 @@ namespace DonationHub.Infrastructure.Persistence.Migrations
                 column: "CategoryId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Campaigns_CreatedByUserId",
+                table: "Campaigns",
+                column: "CreatedByUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Categories_NameAr",
+                table: "Categories",
+                column: "NameAr");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Categories_NameEn",
+                table: "Categories",
+                column: "NameEn");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Donations_CampaignId",
                 table: "Donations",
                 column: "CampaignId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Donations_CreatedByUserId",
+                table: "Donations",
+                column: "CreatedByUserId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_IdempotencyRecords_UserId_RequestHash",
@@ -460,13 +496,13 @@ namespace DonationHub.Infrastructure.Persistence.Migrations
                 name: "AspNetRoles");
 
             migrationBuilder.DropTable(
-                name: "AspNetUsers");
-
-            migrationBuilder.DropTable(
                 name: "Donations");
 
             migrationBuilder.DropTable(
                 name: "Campaigns");
+
+            migrationBuilder.DropTable(
+                name: "AspNetUsers");
 
             migrationBuilder.DropTable(
                 name: "Categories");

@@ -40,6 +40,11 @@ public sealed class DonationConfiguration : BaseEntityConfiguration<Donation>
             .HasForeignKey(donation => donation.CampaignId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        builder.HasOne<ApplicationUser>()
+               .WithMany()
+               .HasForeignKey("CreatedByUserId")
+               .OnDelete(DeleteBehavior.Restrict);
+
         ConfigureBaseProperties(builder);
     }
 }

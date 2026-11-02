@@ -26,8 +26,11 @@ public static class DependencyInjection
         services.AddTransient<IRefreshTokenService, RefreshTokenService>();
         services.AddTransient<ICreateAdminOrStaffService, CreateAdminOrStaffService>();
 
-        services.AddDbContext<AppDbContext>(options =>
-            options.UseSqlServer(connectionString));
+        services.AddScoped<SavingChagnesInterception>();
+
+        services.AddDbContext<AppDbContext>((serviceProvider, options) =>
+            options.UseSqlServer(connectionString)
+                   .AddInterceptors(serviceProvider.GetRequiredService<SavingChagnesInterception>()));
 
         services.AddIdentity<ApplicationUser, IdentityRole<Guid>>()
             .AddEntityFrameworkStores<AppDbContext>()

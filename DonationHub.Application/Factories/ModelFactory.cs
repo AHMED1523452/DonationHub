@@ -20,12 +20,12 @@ public sealed class ModelFactory(TimeProvider timeProvider) : IModelFactory
         };
     }
 
-    public Campaign CreateCampaign(decimal goalAmount, DateTime endDate, Guid categoryId)
+    public Campaign CreateCampaign(string titleAr, string titleEn, string? descriptionAr, string? descriptionEn, string? bannerName, 
+                decimal goalAmount, CurrencyValues currency, DateTime endDate, Guid categoryId)
     {
         var now = timeProvider.GetUtcNow().UtcDateTime;
-        return new Campaign(goalAmount, endDate, now)
+        return new Campaign(titleAr, titleEn, descriptionAr, descriptionEn, bannerName, goalAmount, currency, endDate, categoryId, now)
         {
-            CategoryId = RequireId(categoryId, nameof(categoryId)),
             CreatedAt = now,
             UpdatedAt = now
         };
