@@ -52,7 +52,6 @@ namespace DonationHub.Application.Features.Category.Handlers
 
             category.IsDeleted = true;
             category.DeletedAt = timeProvider.GetUtcNow().UtcDateTime;
-            category.UpdatedAt = timeProvider.GetUtcNow().UtcDateTime;
 
             await unitOfWork.SavechangesAsync(cancellationToken);
 

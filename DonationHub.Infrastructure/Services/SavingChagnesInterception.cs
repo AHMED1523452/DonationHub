@@ -25,12 +25,15 @@ namespace DonationHub.Infrastructure.Services
             return base.SavingChanges(eventData, result);
         }
 
+        //. will be called if i sent the CancellationToken as a parameter 
         public override ValueTask<InterceptionResult<int>> SavingChangesAsync(
             DbContextEventData eventData,
             InterceptionResult<int> result,
             CancellationToken cancellationToken = default)
         {
             Apply(eventData.Context);
+            //. will call the save chnages async from the base class or the parent (DbContextEventData) 
+            //. Context.SaveChangesAsync()
             return base.SavingChangesAsync(eventData, result, cancellationToken);
         }
 
@@ -81,7 +84,7 @@ namespace DonationHub.Infrastructure.Services
 
                         break;
 
-                    case EntityState.Modified:
+                    case EntityState.Modified: 
                         entry.Entity.UpdatedAt = now;
 
                         entry.Property(entity => entity.CreatedAt).IsModified = false;
